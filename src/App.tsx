@@ -29,7 +29,7 @@ function App() {
           </div>
           <button style={{fontSize: "x-large", width: 300}} onClick={async () => {
             const sdk = new CensoWalletIntegration()
-            const session = await sdk.initiate("Test Wallet", (success: boolean) => {
+            const session = await sdk.initiate((success: boolean) => {
               setLink(undefined)
               setState(success ? 'succeeded' : 'failed')
             })
