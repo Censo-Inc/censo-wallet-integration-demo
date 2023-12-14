@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
-import CensoWalletIntegration from "@censo/wallet-integration";
+import CensoWalletIntegration, {CensoWalletConfig, Session} from "@censo/wallet-integration";
 import QRCode from 'react-qr-code'
 
 const mnemonic = 'grocery crush fantasy pulse struggle brain federal equip remember figure lyrics afraid tape ugly gold yard way isolate drill lawn daughter either supply student'
@@ -11,6 +11,20 @@ function App() {
   const [link, setLink] = useState<string>()
   const [state, setState] = useState<'initial' | 'accepted' | 'succeeded' | 'failed'>('initial')
   const [showPhrase, setShowPhrase] = useState<boolean>(false)
+  const [askPermission, setAskPermission] = useState<boolean>(false)
+  const [session, setSession] = useState<Session | undefined>()
+
+  useEffect(() => {
+    if (askPermission) {
+      if (window.confirm("Connected to Censo, export your seed phrase?")) {
+        session!.phrase(raw)
+      } else {
+        session!.cancel()
+      }
+      setAskPermission(false)
+    }
+  }, [askPermission, session])
+
   return (
     <div className="App">
       <header>
@@ -29,13 +43,14 @@ function App() {
           </div>
           <button style={{fontSize: "x-large", width: 300}} onClick={async () => {
             const sdk = new CensoWalletIntegration()
-            const session = await sdk.initiate((success: boolean) => {
+            const session_ = await sdk.initiate((success: boolean) => {
               setLink(undefined)
               setState(success ? 'succeeded' : 'failed')
             })
-            setLink(await session.connect(() => {
+            setSession(session_)
+            setLink(await session_.connect(() => {
               setState('accepted')
-              session.phrase(raw)
+              setAskPermission(true)
             }))
           }}>Export Seed Phrase
           </button>
